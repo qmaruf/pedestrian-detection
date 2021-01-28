@@ -23,8 +23,7 @@ def run(cap, polygon_points):
         contours, hierarchy = cv2.findContours(framediff.copy(),cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         valid = []        
         
-        for cnt in contours:
-            x,y,w,h = cv2.boundingRect(cnt)
+        for cnt in contours:            
             if cv2.contourArea(cnt) > 10:
                 M = cv2.moments(cnt)
                 cX = int(M["m10"] / M["m00"])
@@ -55,6 +54,3 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(config.VIDEO_PATH)
     
     run(cap, polygon_points)
-
-
-
