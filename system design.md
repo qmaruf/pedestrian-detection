@@ -19,7 +19,7 @@ yellow polygon.
 
 In the second task, we locate the pedestrian from this video (https://youtu.be/XWfemvW-Jto). We have used opencv video capture module to extract frames and 
 successive frame difference along with `findContours` module to locate moving pedestrians. Later, using `pointPolygonTest` we have determined whether a 
-pedestrian is inside/outside of a designated area. `python code2.py` will detect these pedestrians and show the frames one by one. A sample frame is like the following one.
+pedestrian is inside/outside of a designated area. `python code2.py` will detect these pedestrians and show the frames one by one. A sample frame is like the following one. Red dots represent pedestrians who are outside the zebra crossing.
 
 ![frame_00099](https://user-images.githubusercontent.com/530250/106085736-760f2b80-616c-11eb-8245-125e442e0def.jpg)
 
