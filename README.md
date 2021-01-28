@@ -39,5 +39,7 @@ python code1.py
 python code2.py
 ```
 
+N.B: Both of these code only work for the data available in the `./data/` folder :)
+
 
 
