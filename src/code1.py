@@ -1,14 +1,8 @@
-import streamlit as st
 import json
 import argparse
 import cv2
 import numpy as np
-
-parser = argparse.ArgumentParser(description='Description of your program')
-parser.add_argument('-image_path','--image_path', help='Image path', required=True)
-parser.add_argument('-ploygon_path','--polygon_path', help='Polygon path', required=True)
-parser.add_argument('-points_path','--points_path', help='Points path', required=True)
-args = vars(parser.parse_args())
+import config
 
 
 def run(image, polygon_points, object_points):
@@ -17,7 +11,7 @@ def run(image, polygon_points, object_points):
 
     for point in object_points:    
         inside = cv2.pointPolygonTest(polygon_points, (point['X'],point['Y']), False)     
-        if inside == -1:
+        if inside < 0:
             image = cv2.circle(image, (point['X'], point['Y']), 2, (255, 0, 0), 5)
         else:
             image = cv2.circle(image, (point['X'], point['Y']), 2, (0, 255, 0), 5)
@@ -29,14 +23,11 @@ def run(image, polygon_points, object_points):
 
 
 if __name__ == '__main__':
-    with open(args['polygon_path']) as hndl:
+    with open(config.FRAME_POLYGON_PATH) as hndl:
         polygon_points = json.load(hndl)
 
-    with open(args['points_path']) as hndl:
+    with open(config.FRAME_OBJECT_PATH) as hndl:
         object_points = json.load(hndl)
 
-    image = cv2.imread(args['image_path'])
+    image = cv2.imread(config.FRAME_PATH)
     run(image, polygon_points, object_points)
-
-
-

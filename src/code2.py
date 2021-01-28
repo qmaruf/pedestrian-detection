@@ -1,70 +1,59 @@
-
+import config
 import json
-import argparse
 import cv2
 import numpy as np
-import torchvision
-from torchvision import transforms as tvt
-from mmdet.apis import init_detector, inference_detector
-
-transform = tvt.Compose([   
-    tvt.ToTensor(),
-    tvt.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-])
-
-def get_model():
-    config_file = "configs/ssd300_coco.py"
-    checkpoint_file = "checkpoints/ssd300_coco_20200307-a92d2092.pth"
-    device = 'cpu'
-    model = init_detector(config_file, checkpoint_file, device=device)
-
-parser = argparse.ArgumentParser(description='Description of your program')
-parser.add_argument('-video_path','--video_path', help='Image path', required=True)
-parser.add_argument('-ploygon_path','--polygon_path', help='Polygon path', required=True)
-args = vars(parser.parse_args())
-
+import time
 
 def run(cap, polygon_points):
+    polygon_points = np.array([[point['X'], point['Y']] for point in polygon_points ]).reshape((-1, 1, 2))
+    
+    _, frame1 = cap.read()
+    while(cap.isOpened()):        
+        _, frame2 = cap.read()
+        frame2orig = frame2.copy()        
+        
+        frame1gray = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+        frame2gray = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
+        
+        framediff = cv2.absdiff(frame2gray, frame1gray)
+        _, framediff = cv2.threshold(framediff, 30, 255, cv2.THRESH_BINARY)
+        kernel = np.ones((3, 3), np.uint8)
+        framediff = cv2.dilate(framediff, kernel, iterations=1)
+        
+        contours, hierarchy = cv2.findContours(framediff.copy(),cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+        valid = []        
+        
+        for cnt in contours:
+            x,y,w,h = cv2.boundingRect(cnt)
+            if cv2.contourArea(cnt) > 10:
+                M = cv2.moments(cnt)
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                                
+                inside = cv2.pointPolygonTest(polygon_points, (cX, cY), False)     
+                if inside < 0:
+                    frame2 = cv2.circle(frame2, (cX, cY), 2, (0, 0, 255), 5)
+                else:
+                    frame2 = cv2.circle(frame2, (cX, cY), 2, (0, 255, 0), 5)
 
-    model = get_model()
-    # model.eval()
-
-    while(cap.isOpened()):
-        ret, frame = cap.read()
-
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        inference_detector(model, frame)
-        frame_tensor = transform(frame).unsqueeze(0)
-        detection = model(frame_tensor)
-
-        cv2.imshow('frame', frame)
+        cv2.polylines(frame2,[polygon_points],True,(0,255,255))
+        cv2.imshow('frame', frame2)        
+        
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
+        
+        frame1 = frame2orig        
+        time.sleep(0.05)   
+        
     cap.release()
-    cv2.destroyAllWindows()
-
-    polygon_points = np.array([[point['X'], point['Y']] for point in polygon_points ]).reshape((-1, 1, 2))
-    cv2.polylines(image,[polygon_points],True,(0,255,255))
-
-    for point in object_points:    
-        inside = cv2.pointPolygonTest(polygon_points, (point['X'],point['Y']), False)     
-        if inside == -1:
-            image = cv2.circle(image, (point['X'], point['Y']), 2, (255, 0, 0), 5)
-        else:
-            image = cv2.circle(image, (point['X'], point['Y']), 2, (0, 255, 0), 5)
-
-
-    cv2.imshow('image', image)
-    cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
-    with open(args['polygon_path']) as hndl:
+    with open(config.VIDEO_POLYGON_PATH) as hndl:
         polygon_points = json.load(hndl)
-
-    cap = cv2.VideoCapture(args['video_path'])
+    cap = cv2.VideoCapture(config.VIDEO_PATH)
+    
     run(cap, polygon_points)
 
 
