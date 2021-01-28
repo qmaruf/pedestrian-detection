@@ -15,7 +15,7 @@ git clone git@github.com:qmaruf/pedestrian-detection.git
 
 Create a virtual environment.
 ```
-virtualenv -p python3.6 venvpd
+virtualenv -p python3.6 ~/venvpd
 ```
 
 Go inside the `pedestrian-detection` directory.
@@ -25,7 +25,7 @@ cd pedestrian-detection
 
 Activate the environment
 ```
-source venvpd/bin/activate
+source ~/venvpd/bin/activate
 ``` 
 
 Install necessary packages
